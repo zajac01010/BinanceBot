@@ -1,7 +1,13 @@
 package com.example.demo;
 
+import java.util.List;
 import java.util.Scanner;
 
+// TODO: clean up unused imports
+import com.binance.api.client.BinanceApiRestClient;
+import com.binance.api.client.BinanceApiClientFactory;
+import com.binance.api.client.domain.market.Candlestick;
+import com.binance.api.client.domain.market.CandlestickInterval;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -10,26 +16,22 @@ import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
-import com.example.demo.web.MyStompSessionHandler;
-
+// TODO: rename the class
 @SpringBootApplication
 public class Demo2Application {
 	
-	private static String URL = "wss://stream.binance.com:9443/ws/btcusdt@trade";
-
 	public static void main(String[] args) {
-		//SpringApplication.run(Demo2Application.class, args);
-		WebSocketClient client = new StandardWebSocketClient();
-        WebSocketStompClient stompClient = new WebSocketStompClient(client);
+        BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance();
 
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+        // Instantiate a simple, blocking client.
+        BinanceApiRestClient client = factory.newRestClient();
 
-        StompSessionHandler sessionHandler = new MyStompSessionHandler();
-        stompClient.connect(URL, sessionHandler);
+        // Print some random stuff, just to validate that it works.
+        long serverTime = client.getServerTime();
+        System.out.println("Server time: " + serverTime);
 
-        new Scanner(System.in).nextLine(); // Don't close immediately.
-		
-		System.out.println("Hello");
+        List<Candlestick> candlesticks = client.getCandlestickBars("YFIBTC", CandlestickInterval.TWO_HOURLY);
+        System.out.println("YFIBTC: " + candlesticks.toString());
 	}
 
 }
