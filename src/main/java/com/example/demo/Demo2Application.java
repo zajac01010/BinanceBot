@@ -1,10 +1,21 @@
 package com.example.demo;
 
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+import java.util.Scanner;
+
+// TODO: clean up unused imports
+import com.binance.api.client.BinanceApiRestClient;
+import com.binance.api.client.BinanceApiClientFactory;
+import com.binance.api.client.domain.market.Candlestick;
+import com.binance.api.client.domain.market.CandlestickInterval;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -12,6 +23,7 @@ import org.springframework.messaging.simp.stomp.StompSessionHandler;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
+
 
 import com.binance.api.client.BinanceApiClientFactory;
 import com.binance.api.client.BinanceApiRestClient;
@@ -48,5 +60,4 @@ public class Demo2Application {
 		boolean shouldBuy = candlestickCheckService.checkIfLastTwoCandlesticksGreen(candlesticks);
 		BinanceApiWebSocketClient client2 = BinanceApiClientFactory.newInstance().newWebSocketClient();
 	}
-
 }
