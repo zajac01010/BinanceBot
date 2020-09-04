@@ -16,6 +16,6 @@ public class CandlestickCheckService {
     }
 
     private boolean checkIfCandleGreen(Candlestick candle) {
-        return Integer.parseInt(candle.getHigh()) > Integer.parseInt(candle.getOpen());
+        return Double.parseDouble(candle.getHigh()) > Double.parseDouble(candle.getOpen());
     }
 }
