@@ -2,20 +2,19 @@ package com.example.demo.services;
 
 import com.binance.api.client.domain.market.Candlestick;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.ta4j.core.Bar;
+import org.ta4j.core.BarSeries;
 
 @Service
 public class CandlestickCheckService {
 
-    public boolean checkIfLastTwoCandlesticksGreen(List<Candlestick> candlesticks) {
-        Candlestick firstCandle = candlesticks.get(candlesticks.size() - 2);
-        Candlestick secondCandle = candlesticks.get(candlesticks.size() - 1);
-
-		return checkIfCandleGreen(firstCandle) && checkIfCandleGreen(secondCandle);
-    }
-
-    private boolean checkIfCandleGreen(Candlestick candle) {
-        return Double.parseDouble(candle.getHigh()) > Double.parseDouble(candle.getOpen());
+    public boolean checkIfLastTwoBarsGreen(BarSeries barSeries) {
+        int barsCount = barSeries.getBarCount();
+        if (barsCount < 2) {
+            return false;
+        }
+        Bar x = barSeries.getBar(barsCount - 1);
+        Bar y = barSeries.getBar(barsCount - 2);
+        return x.isBullish() && y.isBullish();
     }
 }
