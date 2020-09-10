@@ -4,12 +4,11 @@ import com.binance.api.client.BinanceApiClientFactory;
 import com.binance.api.client.BinanceApiRestClient;
 import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.domain.market.*;
-import com.example.demo.services.CandlestickCheckService;
+import com.example.demo.services.StrategyService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.ta4j.core.Bar;
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.BaseBar;
-import org.ta4j.core.BaseBarSeriesBuilder;
+import org.ta4j.core.*;
+import org.ta4j.core.analysis.criteria.ProfitLossPercentageCriterion;
+import org.ta4j.core.num.Num;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -24,8 +23,10 @@ public class Demo2Application {
   private static final String URL = "wss://stream.binance.com:9443/ws/btcusdt@trade";
 
   public static void main(String[] args) {
+    // WIP section
+    // TODO: clean it up
     // SpringApplication.run(Demo2Application.class, args);
-    CandlestickCheckService candlestickCheckService = new CandlestickCheckService();
+    StrategyService strategyService = new StrategyService();
     BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance();
     BinanceApiRestClient client = factory.newRestClient();
     client.ping();
@@ -41,12 +42,20 @@ public class Demo2Application {
         client.getCandlestickBars("YFIBTC", CandlestickInterval.TWO_HOURLY);
     System.out.println(candlesticks.size());
 
-    BarSeries barSeries = getBars(client);
-    boolean shouldBuy = candlestickCheckService.checkIfLastTwoBarsGreen(barSeries);
-    System.out.println(barSeries);
-    System.out.println(shouldBuy);
-
     BinanceApiWebSocketClient client2 = BinanceApiClientFactory.newInstance().newWebSocketClient();
+
+    // Test the green-bar strategy over historical data.
+    BarSeries barSeries = getBars(client);
+    Strategy strategy = strategyService.greenBarStrategy(barSeries);
+
+    BarSeriesManager manager = new BarSeriesManager(barSeries);
+    TradingRecord tradingRecord = manager.run(strategy);
+
+    List<Trade> trades = tradingRecord.getTrades();
+    AnalysisCriterion criterion = new ProfitLossPercentageCriterion();
+    Num profitLoss = criterion.calculate(barSeries, tradingRecord);
+    System.out.println("Strategy results for YFIBTC: " + profitLoss);
+    System.out.println("Trades made: " + trades);
   }
 
   private static BarSeries getBars(BinanceApiRestClient client) {
