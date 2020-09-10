@@ -17,10 +17,18 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Evaluates a strategy on historical data for a single pair on binance. A positive value indicates
+ * that the strategy would be profitable.
+ *
+ * <p>You can modify the `SYMBOL` to check how the strategy would work on other pairs.
+ */
 @SpringBootApplication
 public class Demo2Application {
 
   private static final String URL = "wss://stream.binance.com:9443/ws/btcusdt@trade";
+
+  private static final String SYMBOL = "YFIBTC";
 
   public static void main(String[] args) {
     // WIP section
@@ -32,14 +40,14 @@ public class Demo2Application {
     client.ping();
     long serverTime = client.getServerTime();
     // System.out.println(serverTime);
-    OrderBook orderBook = client.getOrderBook("YFIBTC", 10);
+    OrderBook orderBook = client.getOrderBook(SYMBOL, 10);
     List<OrderBookEntry> asks = orderBook.getAsks();
     OrderBookEntry firstAskEntry = asks.get(0);
     System.out.println(firstAskEntry.getPrice() + " / " + firstAskEntry.getQty());
-    List<AggTrade> aggTrades = client.getAggTrades("YFIBTC");
+    List<AggTrade> aggTrades = client.getAggTrades(SYMBOL);
     System.out.println(aggTrades.size());
     List<Candlestick> candlesticks =
-        client.getCandlestickBars("YFIBTC", CandlestickInterval.TWO_HOURLY);
+        client.getCandlestickBars(SYMBOL, CandlestickInterval.TWO_HOURLY);
     System.out.println(candlesticks.size());
 
     BinanceApiWebSocketClient client2 = BinanceApiClientFactory.newInstance().newWebSocketClient();
@@ -54,23 +62,23 @@ public class Demo2Application {
     List<Trade> trades = tradingRecord.getTrades();
     AnalysisCriterion criterion = new ProfitLossPercentageCriterion();
     Num profitLoss = criterion.calculate(barSeries, tradingRecord);
-    System.out.println("Strategy results for YFIBTC: " + profitLoss);
-    System.out.println("Trades made: " + trades);
+    System.out.printf("Strategy results for %s: %s%n", SYMBOL, profitLoss);
+    System.out.printf("Trades made: %s", trades);
   }
 
   private static BarSeries getBars(BinanceApiRestClient client) {
     List<Bar> bars =
-        client.getCandlestickBars("YFIBTC", CandlestickInterval.TWO_HOURLY).stream()
+        client.getCandlestickBars(SYMBOL, CandlestickInterval.TWO_HOURLY).stream()
             .map(Demo2Application::candlestickToBar)
             .collect(Collectors.toList());
-    return new BaseBarSeriesBuilder().withBars(bars).withName("YFIBTC").build();
+    return new BaseBarSeriesBuilder().withBars(bars).withName(SYMBOL).build();
   }
 
   private static Bar candlestickToBar(Candlestick candlestick) {
     ZonedDateTime closeTime =
         ZonedDateTime.ofInstant(Instant.ofEpochMilli(candlestick.getCloseTime()), ZoneOffset.UTC);
     return new BaseBar(
-        Duration.ofHours(2),
+        Duration.ofHours(2), // TODO: calculate from CandlestickInverval
         closeTime,
         Double.parseDouble(candlestick.getOpen()),
         Double.parseDouble(candlestick.getHigh()),
